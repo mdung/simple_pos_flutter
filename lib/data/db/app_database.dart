@@ -58,6 +58,7 @@ class AppDatabase {
     await db.execute('''
       CREATE TABLE sales (
         id TEXT PRIMARY KEY,
+        receipt_number TEXT NOT NULL,
         date_time TEXT NOT NULL,
         subtotal REAL NOT NULL,
         discount REAL NOT NULL,

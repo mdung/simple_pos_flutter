@@ -8,6 +8,7 @@ import '../../../providers/cart_provider.dart';
 import '../../../providers/sale_provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../services/sale_service.dart';
+import '../../sales/receipt_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({Key? key}) : super(key: key);
@@ -85,7 +86,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
-      await _saleService.createSale(
+      final saleId = await _saleService.createSale(
         cartItems: cartProvider.items,
         discount: discount,
         paymentType: _paymentType,
@@ -95,12 +96,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
       cartProvider.clear();
 
       if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.saleSuccessMessage),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
+        // Get the complete sale with items
+        final saleProvider = Provider.of<SaleProvider>(context, listen: false);
+        final sale = await saleProvider.getSaleWithItems(saleId);
+
+        // Navigate to receipt screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ReceiptScreen(sale: sale),
           ),
         );
       }

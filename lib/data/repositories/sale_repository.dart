@@ -72,6 +72,7 @@ class SaleRepository {
     final items = await getSaleItems(id);
     return Sale(
       id: sale.id,
+      receiptNumber: sale.receiptNumber,
       dateTime: sale.dateTime,
       items: items,
       subtotal: sale.subtotal,

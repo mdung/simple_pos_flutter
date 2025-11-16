@@ -50,6 +50,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          'Receipt #: ${sale.receiptNumber}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
                           '${AppStrings.date}: ${Formatters.formatDate(sale.dateTime)}',
                           style: const TextStyle(fontSize: 16),
                         ),

@@ -21,6 +21,10 @@ class SaleProvider with ChangeNotifier {
     }
   }
 
+  List<Sale> getAllSales() {
+    return _sales;
+  }
+
   Future<void> loadSalesByDate(DateTime date) async {
     _isLoading = true;
     notifyListeners();

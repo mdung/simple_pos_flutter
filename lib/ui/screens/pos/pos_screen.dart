@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../models/cart_item.dart';
+import '../../../models/product.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../providers/product_provider.dart';
 import '../../../providers/settings_provider.dart';
@@ -19,6 +20,9 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
+  final _searchController = TextEditingController();
+  final _barcodeController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -27,8 +31,47 @@ class _PosScreenState extends State<PosScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _barcodeController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadProducts() async {
     await Provider.of<ProductProvider>(context, listen: false).loadProducts();
+  }
+
+  Future<void> _searchByBarcode(String barcode) async {
+    if (barcode.trim().isEmpty) return;
+
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    await productProvider.loadProducts();
+    final allProducts = productProvider.allProducts;
+    
+    // Try to find product by exact barcode match
+    Product? foundProduct;
+    for (var product in allProducts) {
+      if (product.barcode != null && 
+          product.barcode!.toLowerCase() == barcode.trim().toLowerCase()) {
+        foundProduct = product;
+        break;
+      }
+    }
+
+    if (foundProduct != null) {
+      _addToCart(foundProduct);
+      _barcodeController.clear();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Product with barcode $barcode not found'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _addToCart(product) {
@@ -125,12 +168,65 @@ class _PosScreenState extends State<PosScreen> {
           ),
         ],
       ),
-      body: Row(
+      body: Column(
         children: [
-          // Products List
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, SKU, or barcode...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                Provider.of<ProductProvider>(context, listen: false)
+                                    .searchProducts('');
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    onChanged: (value) {
+                      Provider.of<ProductProvider>(context, listen: false)
+                          .searchProducts(value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 120,
+                  child: TextField(
+                    controller: _barcodeController,
+                    decoration: InputDecoration(
+                      hintText: 'Barcode',
+                      prefixIcon: const Icon(Icons.qr_code_scanner),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onSubmitted: _searchByBarcode,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Products and Cart
           Expanded(
-            flex: 2,
-            child: Consumer<ProductProvider>(
+            child: Row(
+              children: [
+                // Products List
+                Expanded(
+                  flex: 2,
+                  child: Consumer<ProductProvider>(
               builder: (context, productProvider, child) {
                 if (productProvider.products.isEmpty) {
                   return const Center(
@@ -214,6 +310,7 @@ class _PosScreenState extends State<PosScreen> {
                 CartSummaryWidget(
                   onCompleteSale: _completeSale,
                   onApplyDiscount: _showDiscountDialog,
+                  ),
                 ),
               ],
             ),

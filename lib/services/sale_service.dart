@@ -37,9 +37,14 @@ class SaleService {
       throw Exception('Insufficient payment');
     }
 
+    // Generate receipt number (format: REC-YYYYMMDD-XXXXX)
+    final now = DateTime.now();
+    final receiptNumber = 'REC-${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-${now.millisecondsSinceEpoch.toString().substring(7)}';
+
     final sale = Sale(
       id: _uuid.v4(),
-      dateTime: DateTime.now(),
+      receiptNumber: receiptNumber,
+      dateTime: now,
       items: [],
       subtotal: subtotal,
       discount: discountAmount,

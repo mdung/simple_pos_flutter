@@ -136,6 +136,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
           Expanded(
             child: Consumer<ProductProvider>(
               builder: (context, provider, child) {
+                // Check for low stock products
+                final lowStockProducts = provider.products.where((p) => p.stock > 0 && p.stock <= 10).toList();
+                final outOfStockProducts = provider.products.where((p) => p.stock == 0).toList();
+
                 if (provider.products.isEmpty) {
                   return Center(
                     child: Column(
@@ -159,32 +163,66 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   );
                 }
 
-              return RefreshIndicator(
-                onRefresh: _loadData,
-                child: ListView.builder(
-                  itemCount: provider.products.length,
-                  itemBuilder: (context, index) {
-                    final product = provider.products[index];
-                    return ProductTile(
-                      product: product,
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductFormScreen(
-                              product: product,
-                            ),
+                return RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: Column(
+                    children: [
+                      // Stock Alerts
+                      if (lowStockProducts.isNotEmpty || outOfStockProducts.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.warning),
                           ),
-                        );
-                        if (mounted) {
-                          await _loadData();
-                        }
-                      },
-                    );
-                  },
-                ),
-              );
-            },
+                          child: Row(
+                            children: [
+                              Icon(Icons.warning_amber, color: AppColors.warning),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${lowStockProducts.length} low stock, ${outOfStockProducts.length} out of stock',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      // Products List
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: provider.products.length,
+                          itemBuilder: (context, index) {
+                            final product = provider.products[index];
+                            return ProductTile(
+                              product: product,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductFormScreen(
+                                      product: product,
+                                    ),
+                                  ),
+                                );
+                                if (mounted) {
+                                  await _loadData();
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

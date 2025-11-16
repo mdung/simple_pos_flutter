@@ -2,6 +2,7 @@ import 'sale_item.dart';
 
 class Sale {
   final String id;
+  final String receiptNumber;
   final DateTime dateTime;
   final List<SaleItem> items;
   final double subtotal;
@@ -14,6 +15,7 @@ class Sale {
 
   Sale({
     required this.id,
+    required this.receiptNumber,
     required this.dateTime,
     required this.items,
     required this.subtotal,
@@ -28,6 +30,7 @@ class Sale {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'receipt_number': receiptNumber,
       'date_time': dateTime.toIso8601String(),
       'subtotal': subtotal,
       'discount': discount,
@@ -42,6 +45,7 @@ class Sale {
   factory Sale.fromMap(Map<String, dynamic> map) {
     return Sale(
       id: map['id'] as String,
+      receiptNumber: map['receipt_number'] as String? ?? map['id'] as String,
       dateTime: DateTime.parse(map['date_time'] as String),
       items: [], // Items loaded separately
       subtotal: (map['subtotal'] as num).toDouble(),
